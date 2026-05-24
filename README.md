@@ -93,7 +93,7 @@ Prints the XZ-plane area of each selected polyline to the Workbench log (in km²
 ---
 
 ### Fix Road Mat Sort Settings
-Migrates legacy `MatSortBias` values on road entities to the correct `RoadSort` field across the entire world.
+Copies the `MatSortBias` values on road entities to the correct `RoadSort` field across the entire world. The official docs state that you should avoid using `MatSortBias`.
 
 ---
 
