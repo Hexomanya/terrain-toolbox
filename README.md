@@ -30,13 +30,13 @@ Some plugins and tools depend on shared helper classes included in this reposito
 ### 📋 Forest Generator Extension
 Adds slope-aware tree placement and automatic outline generation to the built-in Forest Generator.
 
-[![Forest Generator Preview](https://img.youtube.com/vi/TCFK994eGjY/hqdefault.jpg)](https://youtu.be/TCFK994eGjY)
+[![Forest Generator Preview](https://img.youtube.com/vi/TCFK994eGjY/mqdefault.jpg)](https://youtu.be/TCFK994eGjY)
 ---
 
 ### 📋 Rope Generator
 Creates rope / powerline cable segments between consecutive points on a polyline path.
 
-[![Rope Generator Preview](https://img.youtube.com/vi/IP-P1bp2PBc/hqdefault.jpg)](https://youtu.be/IP-P1bp2PBc)
+[![Rope Generator Preview](https://img.youtube.com/vi/IP-P1bp2PBc/mqdefault.jpg)](https://youtu.be/IP-P1bp2PBc)
 
 ---
 
@@ -45,7 +45,7 @@ Creates rope / powerline cable segments between consecutive points on a polyline
 ### 🟢 Correct Spline Slope
 Clamps slope angles on selected splines within a configurable min/max range. Can be used to ensure that rivers only flow downhill.
 
-[![Correct Spline Slope Preview](https://img.youtube.com/vi/lmElxZc0Qtw/hqdefault.jpg)](https://youtu.be/lmElxZc0Qtw)
+[![Correct Spline Slope Preview](https://img.youtube.com/vi/lmElxZc0Qtw/mqdefault.jpg)](https://youtu.be/lmElxZc0Qtw)
 
 ---
 
@@ -53,7 +53,7 @@ Clamps slope angles on selected splines within a configurable min/max range. Can
 It replaces prefabs with weighted-random or in-order alternatives. It is intended for a workflow in which you place basic props down first (e.g. outdoor tables) and then, if performance permits, quickly add details to them later.
 Requires `.conf` asset files. Delete those alongside the scripts when removing.
 
-[![Prefab Randomizer Preview](https://img.youtube.com/vi/lGOzpt-WFa0/hqdefault.jpg)](https://youtu.be/lGOzpt-WFa0)
+[![Prefab Randomizer Preview](https://img.youtube.com/vi/lGOzpt-WFa0/mqdefault.jpg)](https://youtu.be/lGOzpt-WFa0)
 
 > ⚠️ **Warning: "Relative_Y":** Since setting the Relative_Y flag on objects that have the flag set by default is bugged on BIs side, swapping such objects with non-Relative_Y objects may impair the functionality.
 
@@ -62,7 +62,7 @@ Requires `.conf` asset files. Delete those alongside the scripts when removing.
 ### 🟢 Select Objects over Surface
 Finds objects placed on unwanted terrain surfaces (water, roads, custom materials) and optionally moves them to a valid position.
 
-[![Select Objects over Surface Preview](https://img.youtube.com/vi/LFBXAONxYMA/hqdefault.jpg)](https://youtu.be/LFBXAONxYMA)
+[![Select Objects over Surface Preview](https://img.youtube.com/vi/LFBXAONxYMA/mqdefault.jpg)](https://youtu.be/LFBXAONxYMA)
 
 ---
 
@@ -74,7 +74,7 @@ All plugins are 🟢 **Safe** — they only write to standard entity properties 
 ### Copy Transform [`Ctrl+Shift+W`]
 Copies the full transform (position, rotation, placement mode, Relative_Y flag) from the last selected object to all others. Used to manually build walls and sidewalks.
 
-[![Copy Transform Preview](https://img.youtube.com/vi/N6hEQnocGwU/hqdefault.jpg)](https://youtu.be/N6hEQnocGwU)
+[![Copy Transform Preview](https://img.youtube.com/vi/N6hEQnocGwU/mqdefault.jpg)](https://youtu.be/N6hEQnocGwU)
 
 > ⚠️ **Warning: "Relative_Y":** Since setting the Relative_Y flag on objects that have the flag set by default is bugged on BIs side, you will have to match the Relative_Y flag manually before using the plugin.
 
@@ -83,7 +83,7 @@ Copies the full transform (position, rotation, placement mode, Relative_Y flag) 
 ### Copy Rotation [`Shift+Alt+W`]
 Copies the Y-rotation from the last selected object to all other selected objects.
 
-[![Copy Rotation Preview](https://img.youtube.com/vi/C_d7pB7F2CY/hqdefault.jpg)](https://youtu.be/C_d7pB7F2CY)
+[![Copy Rotation Preview](https://img.youtube.com/vi/C_d7pB7F2CY/mqdefault.jpg)](https://youtu.be/C_d7pB7F2CY)
 
 ---
 
