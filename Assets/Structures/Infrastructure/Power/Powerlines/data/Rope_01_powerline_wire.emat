@@ -1,0 +1,18 @@
+MatPBRCable {
+ Color 0.13 0.257 0.162 1
+ SpecularMul 0.54
+ RoughnessScale 1.791
+ BCRMap "{6D8FCF72B491F7C5}Assets/_SharedData/Fabric/ST_Rope_BW_BCR.edds"
+ NormalPower 1.25
+ NMOMap "{555774E06DE6A55B}Assets/_SharedData/Fabric/ST_Rope_BW_NMO.edds"
+ UScale 6
+ MinSagPerMeter 14
+ MaxSagPerMeter 15
+ CableThickness 4
+ "Wind power" 1
+ Swingness 0.5
+ Stifness 1.5
+ "Min affection" 0.25
+ "Swingness XZ power" 2.5
+ "Swingness Y power" 2
+}

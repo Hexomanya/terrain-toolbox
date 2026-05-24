@@ -1,0 +1,18 @@
+GenericEntity : "{40235C78B4D96949}Prefabs/Props/Furniture/TableOld_01/TableOld_01_brown.et" {
+ ID "F0DBA538AC2A0552"
+ coords 1625.261 26.969 1055.1
+ {
+  $grp GenericEntity : "{261F10BDC068BB35}Prefabs/Props/Furniture/ChairOld_01.et" {
+   {
+    ID "6970D5C8141E6145"
+    coords -0.458 1.389 0.316
+    angles 0 176.198 -180
+   }
+   {
+    ID "6970D5C8141E6146"
+    coords 0.449 1.389 -0.375
+    angles 0 -7.185 180
+   }
+  }
+ }
+}

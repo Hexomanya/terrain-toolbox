@@ -1,0 +1,28 @@
+GenericEntity : "{40235C78B4D96949}Prefabs/Props/Furniture/TableOld_01/TableOld_01_brown.et" {
+ ID "F0DBA538AC2A0552"
+ coords 1625.521 26.969 1052.301
+ {
+  $grp GenericEntity : "{D0E01CBC080D4F84}Prefabs/Props/Furniture/ChairRecreation_01/ChairRecreation_01_red.et" {
+   {
+    ID "6970D5C81762860C"
+    coords 0.388 -0.001 -0.471
+    angles 0 -0.368 0
+   }
+   {
+    ID "6970D5C81762860D"
+    coords -0.425 -0.001 -0.483
+    angles 0 -8.849 0
+   }
+   {
+    ID "6970D5C81762898D"
+    coords -0.313 -0.001 0.556
+    angles 0 173.844 0
+   }
+   {
+    ID "6970D5C81762898E"
+    coords 0.286 -0.001 0.423
+    angles 0 -165.368 0
+   }
+  }
+ }
+}

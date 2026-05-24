@@ -1,0 +1,5 @@
+DAB_RopeGeneratorEntity {
+ ID "6970D5DC7B2E5351"
+ Flags 0x100003 0
+ m_ropeMaterial "{9112C1A3EF59A2E1}Assets/Structures/Infrastructure/Power/Powerlines/data/Rope_01_powerline_wire.emat"
+}

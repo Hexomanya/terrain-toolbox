@@ -1,0 +1,20 @@
+GenericEntity : "{2DB729170DBCE7BE}Prefabs/Props/Furniture/TableOld_01/TableOld_01.et" {
+ ID "F0DBA538AC2A0552"
+ coords 1622.192 26.968 1049.333
+ {
+  GenericEntity : "{0133284E3BDEAEC4}Prefabs/Props/Civilian/Ashtray_01_Full_yellow.et" {
+   ID "6970D5C811AE7A1C"
+   coords -0.049 0.9 0.033
+   angles 0 0 0
+  }
+  GenericEntity : "{261F10BDC068BB35}Prefabs/Props/Furniture/ChairOld_01.et" {
+   ID "6970D5C811AE7A1D"
+   coords -0.223 0.001 0.476
+   angles 0 173.121 0
+  }
+  GenericEntity : "{A423D53D3513B56A}Prefabs/Props/Recreation/Beach/SunshadeClosed_01/SunshadeClosed_01_weight_red.et" {
+   ID "6970D5C811AE7A1E"
+   coords -0.947 0 -0.071
+  }
+ }
+}
