@@ -162,7 +162,7 @@ class DAB_ObjectOverSurfaceRemover : WorldEditorTool
 				            coordsToSet = parentEntity.CoordToLocal(candidate);
 				    }
 			
-				    m_API.SetVariableValue(entitySource, {}, DAB_Names.COORDS, coordsToSet.ToString(false));
+				    m_API.SetVariableValue(entitySource, {}, DAB_Constants.COORDS, coordsToSet.ToString(false));
 				
 				    found = true;
 				    break;

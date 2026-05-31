@@ -26,17 +26,17 @@ class AlignObjectTransformsFromLastSelectedPlugin : WorkbenchPlugin
 		
 		
 		vector angles;
-		lastSelectedSource.Get(DAB_Names.ANGLES, angles);
+		lastSelectedSource.Get(DAB_Constants.ANGLES, angles);
 	
 		for (int i, count = (entityCount - 1); i < count; i++)
 		{
 			IEntitySource entitySource = worldEditorAPI.GetSelectedEntity(i);
 			
 			vector anglesSelf;
-			entitySource.Get(DAB_Names.ANGLES, anglesSelf);
+			entitySource.Get(DAB_Constants.ANGLES, anglesSelf);
 			anglesSelf[1] = angles[1];
 			
-			worldEditorAPI.SetVariableValue(entitySource, {}, DAB_Names.ANGLES, anglesSelf.ToString(false));
+			worldEditorAPI.SetVariableValue(entitySource, {}, DAB_Constants.ANGLES, anglesSelf.ToString(false));
 		}
 		
 		worldEditorAPI.SetEntitySelection( worldEditorAPI.GetSelectedEntity(0));

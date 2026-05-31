@@ -33,14 +33,14 @@ class DAB_RoadMatSortFixPlugin : WorkbenchPlugin
 			
 			
 			int matSort;
-			src.Get(DAB_Names.MATSORTBIAS, matSort);
+			src.Get(DAB_Constants.MATSORTBIAS, matSort);
 			if(matSort == 0) continue;
 			
-			src.Set(DAB_Names.ROADSORT, matSort);
+			src.Set(DAB_Constants.ROADSORT, matSort);
 			
 			string defaultVal;
-			src.GetDefaultAsString(DAB_Names.MATSORTBIAS, defaultVal);
-			src.Set(DAB_Names.MATSORTBIAS, defaultVal);
+			src.GetDefaultAsString(DAB_Constants.MATSORTBIAS, defaultVal);
+			src.Set(DAB_Constants.MATSORTBIAS, defaultVal);
 			
 			changedCount++;
 			progress.SetProgress(i / m_allEntities.Count());

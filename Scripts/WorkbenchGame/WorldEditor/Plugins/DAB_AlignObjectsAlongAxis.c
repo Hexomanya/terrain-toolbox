@@ -24,7 +24,7 @@ class DAB_AlignObjectsAlongAxis : WorkbenchPlugin
 		IEntitySource lastSelectedSource = worldEditorAPI.GetSelectedEntity(entityCount - 1);
 
 		vector lastPos;
-		lastSelectedSource.Get(DAB_Names.COORDS, lastPos);
+		lastSelectedSource.Get(DAB_Constants.COORDS, lastPos);
 		
 		for (int i, count = (entityCount - 1); i < count; i++)
 		{
@@ -32,12 +32,12 @@ class DAB_AlignObjectsAlongAxis : WorkbenchPlugin
 			IEntitySource entitySource = worldEditorAPI.GetSelectedEntity(i);
 
 			vector entityPos;
-			entitySource.Get(DAB_Names.COORDS, entityPos);
+			entitySource.Get(DAB_Constants.COORDS, entityPos);
 			
 			entityPos[2] = lastPos[2];
 
 			//Position
-			worldEditorAPI.SetVariableValue(entitySource, {}, DAB_Names.COORDS, entityPos.ToString(false));
+			worldEditorAPI.SetVariableValue(entitySource, {}, DAB_Constants.COORDS, entityPos.ToString(false));
 		}
 		
 		worldEditorAPI.SetEntitySelection( worldEditorAPI.GetSelectedEntity(0));

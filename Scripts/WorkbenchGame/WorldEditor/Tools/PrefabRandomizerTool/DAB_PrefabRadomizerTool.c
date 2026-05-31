@@ -183,7 +183,7 @@ class DAB_PrefabRadomizerTool : WorldEditorTool
 		
 		//Only used for creation. Gets overridden later
 		vector angles;
-		originalSrc.Get(DAB_Names.ANGLES, angles);
+		originalSrc.Get(DAB_Constants.ANGLES, angles);
 		
 		string name = originalEntity.GetName();
 		originalEntity.SetName(string.Empty); // prevents conflict
@@ -203,19 +203,19 @@ class DAB_PrefabRadomizerTool : WorldEditorTool
 				finalCoords = worldPos;
 
 			finalCoords[1] = finalCoords[1] - terrainY;
-			m_API.SetVariableValue(createdEntitySource, null, DAB_Names.COORDS, finalCoords.ToString(false));
+			m_API.SetVariableValue(createdEntitySource, null, DAB_Constants.COORDS, finalCoords.ToString(false));
 		}
 		
 		// --- Copy Scale
 		string scale;
-		originalSrc.Get(DAB_Names.SCALE, scale);
+		originalSrc.Get(DAB_Constants.SCALE, scale);
 		if(scale != string.Empty) //Scale returns empty when it is left at 1 for some reason
-			m_API.SetVariableValue(createdEntitySource, {}, DAB_Names.SCALE, scale);
+			m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.SCALE, scale);
 		
 		// --- Copy over Relative Y setting
 		EntityFlags lastFlags, newFlags;
-		originalSrc.Get(DAB_Names.FLAGS, lastFlags);
-		createdEntitySource.Get(DAB_Names.FLAGS, newFlags);
+		originalSrc.Get(DAB_Constants.FLAGS, lastFlags);
+		createdEntitySource.Get(DAB_Constants.FLAGS, newFlags);
 		
 		if(lastFlags & EntityFlags.RELATIVE_Y) {
 			newFlags |= EntityFlags.RELATIVE_Y;
@@ -223,12 +223,12 @@ class DAB_PrefabRadomizerTool : WorldEditorTool
 			newFlags &= ~EntityFlags.RELATIVE_Y;
 		}
 		
-		m_API.SetVariableValue(createdEntitySource, {}, DAB_Names.FLAGS, (newFlags).ToString());
+		m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.FLAGS, (newFlags).ToString());
 		
 		// --- Copy over placement mode
 		string placementMode;
-		originalSrc.Get(DAB_Names.PLACEMENT, placementMode);
-		m_API.SetVariableValue(createdEntitySource, {}, DAB_Names.PLACEMENT, placementMode);
+		originalSrc.Get(DAB_Constants.PLACEMENT, placementMode);
+		m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.PLACEMENT, placementMode);
 
 		/*
 		//TODO: Runs into problems when replacing a replacer(that has children)
@@ -244,7 +244,7 @@ class DAB_PrefabRadomizerTool : WorldEditorTool
 		}
 		*/
 
-		m_API.SetVariableValue(createdEntitySource, {}, DAB_Names.ANGLES, string.Format("%1 %2 %3", angles[0], angles[1], angles[2]));
+		m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.ANGLES, string.Format("%1 %2 %3", angles[0], angles[1], angles[2]));
 		
 		finalEntities.Insert(createdEntitySource);
 		sourcesToDelete.Insert(originalSrc);

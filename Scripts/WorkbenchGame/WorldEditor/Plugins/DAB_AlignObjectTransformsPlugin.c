@@ -24,8 +24,8 @@ class AlignObjectTransformsToLastSelectedPlugin : WorkbenchPlugin
 		IEntitySource lastSelectedSource = api.GetSelectedEntity(entityCount - 1);
 
 		vector angles, lastPos;
-		lastSelectedSource.Get(DAB_Names.COORDS, lastPos);
-		lastSelectedSource.Get(DAB_Names.ANGLES, angles);
+		lastSelectedSource.Get(DAB_Constants.COORDS, lastPos);
+		lastSelectedSource.Get(DAB_Constants.ANGLES, angles);
 		
 		int placementMode;
 		
@@ -35,16 +35,16 @@ class AlignObjectTransformsToLastSelectedPlugin : WorkbenchPlugin
 			api.BeginEditSequence(entitySource);
 			
 			//Rotation
-			api.SetVariableValue(entitySource, {}, DAB_Names.ANGLES, angles.ToString(false));
+			api.SetVariableValue(entitySource, {}, DAB_Constants.ANGLES, angles.ToString(false));
 
 			//Placement
-			lastSelectedSource.Get(DAB_Names.PLACEMENT, placementMode);
-			api.SetVariableValue(entitySource, {}, DAB_Names.PLACEMENT, placementMode.ToString());
+			lastSelectedSource.Get(DAB_Constants.PLACEMENT, placementMode);
+			api.SetVariableValue(entitySource, {}, DAB_Constants.PLACEMENT, placementMode.ToString());
 			
 			//Flags - Relative_Y
 			EntityFlags lastFlags, newFlags;
-			lastSelectedSource.Get(DAB_Names.FLAGS, lastFlags);
-			entitySource.Get(DAB_Names.FLAGS, newFlags);
+			lastSelectedSource.Get(DAB_Constants.FLAGS, lastFlags);
+			entitySource.Get(DAB_Constants.FLAGS, newFlags);
 
 			if(lastFlags & EntityFlags.RELATIVE_Y) {
 				newFlags |= EntityFlags.RELATIVE_Y;
@@ -53,10 +53,10 @@ class AlignObjectTransformsToLastSelectedPlugin : WorkbenchPlugin
 			}
 
 			//Flags
-			//api.SetVariableValue(entitySource, null, DAB_Names.FLAGS, newFlags.ToString());
+			//api.SetVariableValue(entitySource, null, DAB_Constants.FLAGS, newFlags.ToString());
 			
 			//Position
-			api.SetVariableValue(entitySource, {}, DAB_Names.COORDS, lastPos.ToString(false));
+			api.SetVariableValue(entitySource, {}, DAB_Constants.COORDS, lastPos.ToString(false));
 			api.EndEditSequence(entitySource);
 		}
 		
