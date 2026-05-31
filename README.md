@@ -66,6 +66,11 @@ Finds objects placed on unwanted terrain surfaces (water, roads, custom material
 
 ---
 
+### 🟢 Terrain Exporter Tool - Fixed
+This is not a new tool, but a fix of the vanilla tool of the same name. Normally the terrain data send to blender was broken. This modification fixes that.
+
+---
+
 ## Plugins
 
 Plugins are one-click actions found under **World Editor → Plugins → DAB - Misc**.  
@@ -89,6 +94,11 @@ Copies the Y-rotation from the last selected object to all other selected object
 
 ### Calculate Polyline Area
 Prints the XZ-plane area of each selected polyline to the Workbench log (in km²).
+
+---
+
+### FPS Diagnostic - Extended
+This is a new variant of the vanilla FPS Diagnostic plugin. This extension fixes the camera orientation (it actually turns into the correct rotation) and comes with an area overwrite, allowing you to benchmark a subarea of your terrain.
 
 ---
 

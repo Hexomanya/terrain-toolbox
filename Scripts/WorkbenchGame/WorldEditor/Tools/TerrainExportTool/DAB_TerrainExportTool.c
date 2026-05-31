@@ -1,12 +1,9 @@
-
-// WARNING! The vanilla class does NOT use the correct nomenclatur! e.g. memeber variables are not prefixed with m_
+// WARNING! The vanilla class does NOT use the correct nomenclatur! e.g. memeber variables are not prefixed with 'm_'
 modded class TerrainExportTool
 {
 	[ButtonAttribute("Export To Blender")]
 	protected override void Blender()
-	{
-		Print("Used override!");
-		
+	{	
 		if (!EBTConfigPlugin.HasBlenderRegistered())
 			return;
 		WorldEditor we = Workbench.GetModule(WorldEditor);
