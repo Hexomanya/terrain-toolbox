@@ -1,4 +1,5 @@
 // WARNING! The vanilla class does NOT use the correct nomenclatur! e.g. memeber variables are not prefixed with 'm_'
+// This file was partially created with AI (Gemini Pro (Date: 31.05.2026))
 modded class TerrainExportTool
 {
 	[ButtonAttribute("Export To Blender")]
@@ -19,7 +20,6 @@ modded class TerrainExportTool
 		float tileResX = (m_API.GetTerrainResolutionX(0) * m_API.GetTerrainUnitScale(0)) / m_API.GetTerrainTilesX(0) / m_API.GetTerrainUnitScale();
 		float tileResY = (m_API.GetTerrainResolutionY(0) * m_API.GetTerrainUnitScale(0)) / m_API.GetTerrainTilesY(0) / m_API.GetTerrainUnitScale();
 		
-		// FIX 1: Add +1 to account for vertices instead of cells
 		int verticesX = Math.Floor(tileResX) + 1;
 		int verticesY = Math.Floor(tileResY) + 1;
 		int area = verticesX * verticesY; 
@@ -33,7 +33,6 @@ modded class TerrainExportTool
 
 		for(int i = 0; i < selectedCoords.Count(); i++)
 		{
-			// FIX 2: Clear the array before fetching new tile data
 			heightMap.Clear(); 
 			
 			tileCount += 1;
