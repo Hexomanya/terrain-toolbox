@@ -1,5 +1,8 @@
+#ifdef WORKBENCH
+
 // WARNING! The vanilla class does NOT use the correct nomenclatur! e.g. memeber variables are not prefixed with 'm_'
-// This file was partially created with AI (Gemini Pro (Date: 31.05.2026))
+// THIS CLASS WAS/IS A MESS! 
+[WorkbenchToolAttribute(name: "[Fixed]: Send Terrain To Blender", description: "Sends terrain selection to Blender for advanced terrain modifications.", wbModules: { "WorldEditor" }, shortcut: "Ctrl+P", awesomeFontCode: 0xf517)]
 modded class TerrainExportTool
 {
 	[ButtonAttribute("Export To Blender")]
@@ -7,68 +10,76 @@ modded class TerrainExportTool
 	{	
 		if (!EBTConfigPlugin.HasBlenderRegistered())
 			return;
-		WorldEditor we = Workbench.GetModule(WorldEditor);
-		auto api = we.GetApi();
-		array<float> heightMap = {};
-	
 		
+		// Command parameters
 		string path;
-		// creating temp bin file to pass the coords
+		float cellSize = m_API.GetTerrainUnitScale();;
+		string worldpath;
+		int tileCount = 0;
+		
+		// Fill command parameters
 		Workbench.GetAbsolutePath("$profile:", path);
 		path = path + "/BlendTerrain.bin";
+		
+		m_API.GetWorldPath(worldpath);
+		
+		
 
-		float tileResX = (m_API.GetTerrainResolutionX(0) * m_API.GetTerrainUnitScale(0)) / m_API.GetTerrainTilesX(0) / m_API.GetTerrainUnitScale();
-		float tileResY = (m_API.GetTerrainResolutionY(0) * m_API.GetTerrainUnitScale(0)) / m_API.GetTerrainTilesY(0) / m_API.GetTerrainUnitScale();
+		vector terrainDimensions =  SCR_WorldEditorToolHelper.GetTerrainDimensions();
+		float tileSizeX = terrainDimensions[0] / m_API.GetTerrainTilesX();
+		float tileSizeZ = terrainDimensions[2] / m_API.GetTerrainTilesY(); // We change name to Z because this is the actual coord direction
 		
-		int verticesX = Math.Floor(tileResX) + 1;
-		int verticesY = Math.Floor(tileResY) + 1;
-		int area = verticesX * verticesY; 
+		if(!float.AlmostEqual(tileSizeX, tileSizeZ))
+		{
+			PrintFormat("Found non square tile with x: %1, z: %2. This should not be possible!", tileSizeX, tileSizeZ, LogLevel.ERROR);
+			return;
+		}
 		
-		int tileCount = 0;
+		int verticesX = Math.Floor(tileSizeX / cellSize) + 1;
+		int vertexCount = verticesX * verticesX;  // We assume that the tile is square
+	
 		FileHandle bin = FileIO.OpenFile(path, FileMode.WRITE);
-		api.BeginTerrainAction(TerrainToolType.HEIGHT_EXACT);
-		
-		// Area of one tile
-		bin.Write(area);
+		bin.Write(vertexCount); // Header: VertexCount of one tile
 
+		m_API.BeginTerrainAction(TerrainToolType.HEIGHT_EXACT); // To ensure that the terrain data is loaded?
+		array<float> heightMap = {};
+		
 		for(int i = 0; i < selectedCoords.Count(); i++)
 		{
 			heightMap.Clear(); 
 			
-			tileCount += 1;
-			int coordsX = Math.Round(selectedCoords[i][0] * (Math.Floor(tileResX) * m_API.GetTerrainUnitScale()));
-			int coordsY = Math.Round(selectedCoords[i][2] * (Math.Floor(tileResY) * m_API.GetTerrainUnitScale()));
+			PrintFormat("Selected coords at %1 are %2", i, selectedCoords[i]);
+			int tileIndexX = selectedCoords[i][0]; //Blender expects int not float
+			int tileIndexZ = selectedCoords[i][2];
 			
-			int indexX = selectedCoords[i][0];
-			int indexY = selectedCoords[i][2];
-			bin.Write(indexX);
-			bin.Write(indexY);
+			bin.Write(tileIndexX); 
+			bin.Write(tileIndexZ);
 			
-			bin.Write(coordsX);
-			bin.Write(coordsY);
+			int lowLeftCornerX = tileIndexX * tileSizeX;
+			int lowLeftCornerZ = tileIndexZ * tileSizeZ;
+			bin.Write(lowLeftCornerX);
+			bin.Write(lowLeftCornerZ);
 
-			if (api.GetTerrainSurfaceTile(0, selectedCoords[i][0], selectedCoords[i][2], heightMap))
-			{
+			if (m_API.GetTerrainSurfaceTile(0, selectedCoords[i][0], selectedCoords[i][2], heightMap))
 				bin.WriteArray(heightMap);
-			}
+			
+			tileCount += 1;
 		}
-		api.EndTerrainAction();		
+		m_API.EndTerrainAction();		
 		bin.Close();
 				
 		string pathToExecutable;
 		if (!EBTConfigPlugin.GetDefaultBlenderPath(pathToExecutable))
 			return;
 
-		string worldpath;
-		m_API.GetWorldPath(worldpath);
-		
 		BlenderOperatorDescription operatorDescription = new BlenderOperatorDescription("terrain");
 		operatorDescription.blIDName = "ebt.import_terrain";
 		operatorDescription.AddParam("bin_path", path);
-		operatorDescription.AddParam("cell_size", m_API.GetTerrainUnitScale(0));
-		operatorDescription.AddParam("world_path",worldpath);
+		operatorDescription.AddParam("cell_size", cellSize);
+		operatorDescription.AddParam("world_path", worldpath);
 		operatorDescription.AddParam("tile_count", tileCount);
 		
 		StartBlenderWithOperator(operatorDescription, false);
 	}
 }
+#endif //Workbench
