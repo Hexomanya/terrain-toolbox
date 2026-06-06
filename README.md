@@ -33,7 +33,7 @@ Adds slope-aware tree placement and automatic outline generation to the built-in
 [![Forest Generator Preview](https://img.youtube.com/vi/TCFK994eGjY/mqdefault.jpg)](https://youtu.be/TCFK994eGjY)
 ---
 
-### 📋 Rope Generator
+### [📋 Rope Generator](/Docs/docs_generator_rope.md)
 Creates rope / powerline cable segments between consecutive points on a polyline path.
 
 [![Rope Generator Preview](https://img.youtube.com/vi/IP-P1bp2PBc/mqdefault.jpg)](https://youtu.be/IP-P1bp2PBc)
