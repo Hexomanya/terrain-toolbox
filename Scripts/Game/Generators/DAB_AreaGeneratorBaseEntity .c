@@ -1,3 +1,4 @@
+#ifdef WORKBENCH
 modded class SCR_AreaGeneratorBaseEntity 
 {
 	//From LouMontana: https://feedback.bistudio.com/T199212, should be fixed in 1.7
@@ -15,3 +16,4 @@ modded class SCR_AreaGeneratorBaseEntity
 		s_ObstacleDetector.RefreshObstaclesByAABB(CoordToParent(bbox.m_vMin), CoordToParent(bbox.m_vMax));
 	}
 }
+#endif

@@ -1,6 +1,5 @@
 modded class ForestGeneratorEntity {
-	#ifdef WORKBENCH
-
+	
 	protected ref DAB_TerrainObstacleGrid m_TerrainObstacleGrid = new DAB_TerrainObstacleGrid();
 	
 	protected const float MAX_SLOPE_ANGLE = 90;
@@ -50,6 +49,8 @@ modded class ForestGeneratorEntity {
 	[Attribute(defvalue: "0", desc: "", category: "Outline Settings - Advanced")]
 	bool m_bEnableSlopeDebugVisualization;
 	
+	
+	#ifdef WORKBENCH
 	
 	protected ref array<ref DAB_ForestOutline> m_aSlopeOutlines = {};
 	protected ref array<ref ForestGeneratorTree> m_aSwapableOutlineTrees = {};
