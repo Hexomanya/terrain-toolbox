@@ -186,7 +186,7 @@ class DAB_FPSDiagnosticPlugin : SCR_FPSDiagnosticPlugin
 				m_fScenePause,
 				ESTIMATE_FACTOR,
 				m_fStartDelay),
-				new WorkbenchDialog_OKCancel()) == 0)
+				new SCR_OKCancelWorkbenchDialog()) == 0)
 			return;
 
 		float lowestFPS = float.MAX;

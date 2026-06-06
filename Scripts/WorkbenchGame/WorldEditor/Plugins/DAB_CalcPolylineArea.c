@@ -26,14 +26,14 @@ class DAB_CalcPolylineArea: WorkbenchPlugin
 		for (int i; i < selectedPolylines.Count(); i++)
 		{
 			IEntitySource source = selectedPolylines[i];
-			int area = this.CalculateArea(source, m_API);
+			float area = this.CalculateArea(source, m_API);
 			PrintFormat("Area for entity %1 is %2 %3", source.GetName(), (area / areaDivider), areaUnit);
 		}
 		
 		m_API.EndEntityAction();
 	}
 	
-	protected int CalculateArea(IEntitySource polylineSource, WorldEditorAPI m_API)
+	protected float CalculateArea(IEntitySource polylineSource, WorldEditorAPI m_API)
 	{
 		PolylineShapeEntity polyline = PolylineShapeEntity.Cast(m_API.SourceToEntity(polylineSource));
 		if(!polyline) {
