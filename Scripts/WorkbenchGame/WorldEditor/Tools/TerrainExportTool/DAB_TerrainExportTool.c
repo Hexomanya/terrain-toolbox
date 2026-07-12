@@ -22,8 +22,6 @@ modded class TerrainExportTool
 		path = path + "/BlendTerrain.bin";
 		
 		m_API.GetWorldPath(worldpath);
-		
-		
 
 		vector terrainDimensions =  SCR_WorldEditorToolHelper.GetTerrainDimensions();
 		float tileSizeX = terrainDimensions[0] / m_API.GetTerrainTilesX();

@@ -4,6 +4,13 @@ modded class ForestGeneratorEntity {
 	
 	protected const float MAX_SLOPE_ANGLE = 90;
 	
+	[Attribute(defvalue: "0", desc: "", category: "Object Settings")]
+	bool m_bUseImprovedAvoidObjects;
+	
+	[Attribute(defvalue: "5", desc: "", category: "Object Settings")]
+	float m_fObjectTestHeight;
+	
+	
 	[Attribute(defvalue: "0", desc: "", category: "Slope Settings")]
 	bool m_bEnableSlopeChecks;
 	
@@ -64,6 +71,12 @@ modded class ForestGeneratorEntity {
 	{
 		m_Grid.Clear();
 		m_aGridEntries.Clear();
+		
+		if(m_bUseImprovedAvoidObjects && m_bAvoidObjects)
+		{
+			Print("UseImprovedAvoidObjects and AvoidObjects are turned on in the same time! Turning of default AvoidObjects", LogLevel.WARNING);
+			m_bAvoidObjects = false;
+		}
 
 		m_fArea = SCR_Math2D.GetPolygonArea(polygon2D);
 		
@@ -261,6 +274,32 @@ modded class ForestGeneratorEntity {
 	
 		return !isTooSteep;
 	}
+	
+	protected bool IsEntryObjectValid(ForestGeneratorTree tree, vector pointLocal)
+	{
+		if(!m_bUseImprovedAvoidObjects) return true;
+		
+		WorldEditorAPI worldEditorAPI = _WB_GetEditorAPI();
+		BaseWorld world = worldEditorAPI.GetWorld();
+	
+		vector worldMat[4];
+		GetWorldTransform(worldMat);
+		vector worldPosition = pointLocal.Multiply4(worldMat);
+		float groundHeight = world.GetSurfaceY(worldPosition[0], worldPosition[2]) + 0.01;
+		
+		vector groundPosition = Vector(worldPosition[0], groundHeight, worldPosition[2]);
+		vector startPosition = Vector(worldPosition[0], (groundHeight + m_fObjectTestHeight), worldPosition[2]);
+		
+		TraceParam param = new TraceParam;
+		param.Start = startPosition;
+		param.End = groundPosition;
+		param.Flags = TraceFlags.ENTS; 
+		
+		PrintFormat("Start is %1", startPosition);
+		
+		if(world.TraceMove(param) < 1) return false;
+		return true;
+	}
 
 	// Filter by Slope
 	//------------------------------------------------------------------------------------------------
@@ -278,6 +317,7 @@ modded class ForestGeneratorEntity {
 		
 		float swapTreePercent
 		if(!IsEntrySlopeValid(tree, pointLocal, swapTreePercent)) return false;
+		if(!IsEntryObjectValid(tree, pointLocal)) return false;
 
 		FallenTree fallenTree = FallenTree.Cast(tree);
 		if (fallenTree)
