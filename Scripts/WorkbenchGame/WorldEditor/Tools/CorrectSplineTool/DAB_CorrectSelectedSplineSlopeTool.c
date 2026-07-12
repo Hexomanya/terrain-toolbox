@@ -80,6 +80,21 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 	protected void CorrectSlopes()
 	{		
 		array<IEntitySource> selectedSplines = GetSelectedSplines();
+		if(selectedSplines.Count() == 0)
+		{
+			Print("You did not select any splines to correct!", LogLevel.WARNING);
+			return;
+		}
+		
+		if(m_maxSlope < m_minSlope)
+		{
+			float safeMaxSlope = m_maxSlope;
+			m_maxSlope = m_minSlope;
+			m_minSlope = safeMaxSlope;
+			UpdatePropertyPanel();
+			
+			Print("The Max Slope was smaller then the Min Slope, they have been swapped, so the tool works correctly!", LogLevel.WARNING);
+		}
 				
 		for (int i; i < selectedSplines.Count(); i++)
 		{
@@ -130,13 +145,11 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 		
 		int adjustedPointCount = 0;
 		bool goingUphill = m_fixedPoint == FixedSplineEndPoint.FIX_LOWEST_POINT;
-		bool countFromBackToFront = (goingUphill && (endHeight < startHeight)) 
-									|| (!goingUphill && (endHeight > startHeight));
+		bool countFromBackToFront = (goingUphill && (endHeight < startHeight)) || (!goingUphill && (endHeight > startHeight));
 		
 		if(countFromBackToFront){
 			
 			//Print("Back -> Front");
-			//Ignore first point
 			for (int j = positions.Count() - 2; j >= 0; j--){
 				vector currentPoint = positions[j];
 				vector previousPoint = positions[j+1];
@@ -144,7 +157,7 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 				float distanceXZ = vector.DistanceXZ(previousPoint, currentPoint);
 				
 				float actualHeight = currentPoint[1] - previousPoint[1];
-				if(!goingUphill) actualHeight = previousPoint[1] - currentPoint[1];	
+				if(goingUphill) actualHeight = previousPoint[1] - currentPoint[1];	
 				
 				float minHeight = Math.Tan(Math.DEG2RAD * m_minSlope) * distanceXZ;
 				float maxHeight = Math.Tan(Math.DEG2RAD * m_maxSlope) * distanceXZ;
@@ -161,12 +174,10 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 					currentPoint[1] = previousPoint[1] - actualHeight;
 				}
 				
-
 				positions[j] = currentPoint;
 			}
 		} else {
 			//Print("Front -> Back");
-			//Ignore first point
 			for (int j = 1; j < positions.Count(); j++){
 				vector previousPoint = positions[j-1];
 				vector currentPoint = positions[j];
@@ -174,7 +185,7 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 				float distanceXZ = vector.DistanceXZ(previousPoint, currentPoint);
 				
 				float actualHeight = previousPoint[1] - currentPoint[1];
-				if(goingUphill) actualHeight = currentPoint[1] - previousPoint[1];
+				if(!goingUphill) actualHeight = currentPoint[1] - previousPoint[1];
 				
 				float minHeight = Math.Tan(Math.DEG2RAD * m_minSlope) * distanceXZ;
 				float maxHeight = Math.Tan(Math.DEG2RAD * m_maxSlope) * distanceXZ;
@@ -184,13 +195,12 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 				didChangeHeights = true;
 				adjustedPointCount++;
 				
-				actualHeight = Math.Clamp(actualHeight, minHeight, maxHeight);
-				currentPoint[1] = previousPoint[1] - actualHeight;
+				float clampedHeight = Math.Clamp(actualHeight, minHeight, maxHeight);
 				
 				if(!goingUphill){
-					currentPoint[1] = previousPoint[1] - actualHeight;
+					currentPoint[1] = previousPoint[1] - clampedHeight;
 				} else {
-					currentPoint[1] = previousPoint[1] + actualHeight;
+					currentPoint[1] = previousPoint[1] + clampedHeight;
 				}
 			
 				positions[j] = currentPoint;
@@ -210,6 +220,7 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 		m_API.BeginEntityAction("CorrectingSplineElevation", "");
 		
 		DAB_ShapeHelper.ModifyPolyline(splineSrc, positions);
+		
 		if(!m_useHymanInstead)
 		{
 			ClampTangentsForMonotonicity(positions, tangents);
@@ -218,7 +229,7 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 			ApplyHymanMehtod(positions, tangents)
 		}
 
-		CopyTangents(splineSrc, tangents);
+		SetTangents(splineSrc, tangents);
 		
 		m_API.EndEntityAction("CorrectingSplineElevation");
 		m_API.EndEditSequence(splineSrc);
@@ -336,7 +347,7 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 		}
 	}
 	
-	protected void CopyTangents(IEntitySource splineSrc, array<vector> tangents)
+	protected void SetTangents(IEntitySource splineSrc, array<vector> tangents)
 	{
 		BaseContainerList points = splineSrc.GetObjectArray("Points");
 		
@@ -353,9 +364,9 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 			
 			vector inTangent = tangents[j * 2];
 			vector outTangent = tangents[(j * 2) + 1];
-			
-			m_API.SetVariableValue(splineSrc, containerPath, "InTangent", inTangent.ToString(false));	
-			m_API.SetVariableValue(splineSrc, containerPath, "OutTangent", outTangent.ToString(false));		
+						
+			m_API.SetVariableValue(splineSrc, containerPath, "InTangent", DAB_StringHelper.VectorToString(inTangent));	
+			m_API.SetVariableValue(splineSrc, containerPath, "OutTangent", DAB_StringHelper.VectorToString(outTangent));		
 		}
 	}
 

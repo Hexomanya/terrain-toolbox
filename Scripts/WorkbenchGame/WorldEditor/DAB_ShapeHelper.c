@@ -15,11 +15,11 @@ class DAB_ShapeHelper
 		{
 			api.RemoveObjectArrayVariableMember(entSrc, null, "Points", i);
 		}
-
+		
 		foreach (int i, vector point : points)
 		{
 			api.CreateObjectArrayVariableMember(entSrc, null, "Points", "ShapePoint", i);
-			api.SetVariableValue(entSrc, { new ContainerIdPathEntry("Points", i) }, "Position", string.Format("%1 %2 %3", point[0], point[1], point[2]));
+			api.SetVariableValue(entSrc, { new ContainerIdPathEntry("Points", i) }, "Position", DAB_StringHelper.VectorToString(point));
 		}
 	}
 	

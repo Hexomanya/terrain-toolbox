@@ -244,7 +244,7 @@ class DAB_PrefabRadomizerTool : WorldEditorTool
 		}
 		*/
 
-		m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.ANGLES, string.Format("%1 %2 %3", angles[0], angles[1], angles[2]));
+		m_API.SetVariableValue(createdEntitySource, {}, DAB_Constants.ANGLES, DAB_StringHelper.VectorToString(angles));
 		
 		finalEntities.Insert(createdEntitySource);
 		sourcesToDelete.Insert(originalSrc);
