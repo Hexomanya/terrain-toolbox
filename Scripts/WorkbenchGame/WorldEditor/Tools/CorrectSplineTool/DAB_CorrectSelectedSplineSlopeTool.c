@@ -147,64 +147,49 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 		bool goingUphill = m_fixedPoint == FixedSplineEndPoint.FIX_LOWEST_POINT;
 		bool countFromBackToFront = (goingUphill && (endHeight < startHeight)) || (!goingUphill && (endHeight > startHeight));
 		
-		if(countFromBackToFront){
+		int pointCount = positions.Count();
+		int step, startIndex, endIndexExclusive;
+		if(countFromBackToFront)
+		{
+			step = -1;
+			startIndex = pointCount - 2;
+			endIndexExclusive = -1;
+		} else
+		{
+			step = 1;
+			startIndex = 1;
+			endIndexExclusive = pointCount;
+		}
+		
+		for (int j = startIndex; j != endIndexExclusive; j += step)
+		{
+			int anchorIndex;
+			if(countFromBackToFront) anchorIndex = j + 1;
+			else anchorIndex = j - 1;
 			
-			//Print("Back -> Front");
-			for (int j = positions.Count() - 2; j >= 0; j--){
-				vector currentPoint = positions[j];
-				vector previousPoint = positions[j+1];
-
-				float distanceXZ = vector.DistanceXZ(previousPoint, currentPoint);
-				
-				float actualHeight = currentPoint[1] - previousPoint[1];
-				if(goingUphill) actualHeight = previousPoint[1] - currentPoint[1];	
-				
-				float minHeight = Math.Tan(Math.DEG2RAD * m_minSlope) * distanceXZ;
-				float maxHeight = Math.Tan(Math.DEG2RAD * m_maxSlope) * distanceXZ;
-				
-				if(actualHeight > minHeight && actualHeight < maxHeight) continue;
-				
-				didChangeHeights = true;
-				adjustedPointCount++;
-				
-				actualHeight = Math.Clamp(actualHeight, minHeight, maxHeight);
-				if(goingUphill){
-					currentPoint[1] = previousPoint[1] + actualHeight;
-				} else {
-					currentPoint[1] = previousPoint[1] - actualHeight;
-				}
-				
-				positions[j] = currentPoint;
-			}
-		} else {
-			//Print("Front -> Back");
-			for (int j = 1; j < positions.Count(); j++){
-				vector previousPoint = positions[j-1];
-				vector currentPoint = positions[j];
-				
-				float distanceXZ = vector.DistanceXZ(previousPoint, currentPoint);
-				
-				float actualHeight = previousPoint[1] - currentPoint[1];
-				if(!goingUphill) actualHeight = currentPoint[1] - previousPoint[1];
-				
-				float minHeight = Math.Tan(Math.DEG2RAD * m_minSlope) * distanceXZ;
-				float maxHeight = Math.Tan(Math.DEG2RAD * m_maxSlope) * distanceXZ;
-				
-				if(actualHeight > minHeight && actualHeight < maxHeight) continue;
-				
-				didChangeHeights = true;
-				adjustedPointCount++;
-				
-				float clampedHeight = Math.Clamp(actualHeight, minHeight, maxHeight);
-				
-				if(!goingUphill){
-					currentPoint[1] = previousPoint[1] - clampedHeight;
-				} else {
-					currentPoint[1] = previousPoint[1] + clampedHeight;
-				}
+			vector anchorPoint = positions[anchorIndex];
+			vector currentPoint = positions[j];
 			
-				positions[j] = currentPoint;
-			}
+			float distanceXZ = vector.DistanceXZ(anchorPoint, currentPoint);
+			
+			float actualHeight;
+			if(goingUphill) actualHeight = anchorPoint[1] - currentPoint[1];
+			else actualHeight = currentPoint[1] - anchorPoint[1];
+			
+			float minHeight = Math.Tan(Math.DEG2RAD * m_minSlope) * distanceXZ;
+			float maxHeight = Math.Tan(Math.DEG2RAD * m_maxSlope) * distanceXZ;
+			
+			if(actualHeight > minHeight && actualHeight < maxHeight) continue;
+			
+			didChangeHeights = true;
+			adjustedPointCount++;
+			
+			float clampedHeight = Math.Clamp(actualHeight, minHeight, maxHeight);
+			
+			if(goingUphill) currentPoint[1] = anchorPoint[1] + clampedHeight;
+			else currentPoint[1] = anchorPoint[1] - clampedHeight;
+			
+			positions[j] = currentPoint;
 		}
 		
 		array<vector> tangents = {};
@@ -235,7 +220,6 @@ class DAB_CorrectSelectedSplineSlopeTool: WorldEditorTool
 		m_API.EndEditSequence(splineSrc);
 		
 		DAB_ShapeHelper.FixTerrainAdjustmentGenerators(splineSrc); //This produces errors, but still works (Nothing we can do)
-		
 		
 		Print("Adjusted " + adjustedPointCount + "/" + positions.Count() + " points of the Spline.");
 	}
