@@ -11,7 +11,7 @@ class DAB_TerrainObstaclePoint
 	{
 		m_bIsOutside = isOutside;
 		m_fSlope = slope;
-		m_bIsOnBannedMaterial = materialRatio;
+		m_bIsOnBannedMaterial = isOnBannedMaterial;
 	}	
 	
 	bool IsOutside(){return m_bIsOutside; }

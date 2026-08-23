@@ -34,7 +34,10 @@ class DAB_TerrainObstacleGrid
 		float maxSlope,
 		bool enableSlopeOutlines,
 		float minOutlineArea,
-		float maxPointRemovalError
+		float maxPointRemovalError,
+		array<ResourceName> illegalSurfaces,
+		bool areRoadsIllegal,
+	 	bool isWaterIllegal
 	){
 		ClearGrid();
 		
@@ -71,10 +74,10 @@ class DAB_TerrainObstacleGrid
 					slope = ComputePointSlope(localPointPosition, world);
 					if(slope >= maxSlope) slopeTileIndices.Insert(m_aPoints.Count());
 					
-					isOnBannedMaterial
+					isOnBannedMaterial = ComputeIsOnBannedMaterial(world, localPointPosition, illegalSurfaces, areRoadsIllegal,isWaterIllegal);
 				}
 				
-				m_aPoints.Insert(new DAB_TerrainObstaclePoint(isOutside, slope));
+				m_aPoints.Insert(new DAB_TerrainObstaclePoint(isOutside, slope, isOnBannedMaterial));
 			}
 		}
 		if(maxSlope <= 0) return; //This would cause a double outline
@@ -457,6 +460,16 @@ class DAB_TerrainObstacleGrid
 		return Math.RAD2DEG * Math.Acos(vector.Dot(Vector(0, 1, 0), normal)); 
 	}
 	
+	protected bool ComputeIsOnBannedMaterial(BaseWorld world, vector localPointPosition, array<ResourceName> illegalSurfaces, bool areRoadsIllegal, bool isWaterIllegal)
+	{
+		vector worldPosition = LocalToWorld(localPointPosition);
+		
+		if(DAB_WorldHelper.IsPositionOverSurfaces(world, worldPosition, illegalSurfaces, isWaterIllegal, areRoadsIllegal)) 
+			return true;
+		
+		return false;
+	}
+	
 	//------------------------------------------------------------------------------------------------
 	protected vector GetLocalPointPosition(int x, int z)
 	{
@@ -624,7 +637,7 @@ class DAB_TerrainObstacleGrid
 		int stateKey = 0;
 		
 		for(int i = 0; i < 4; i++){
-			if(!tilePoints[i].IsOutside() && tilePoints[i].GetSlope() > maxSlope && !tilePoints[i].GetIsOnBannedMaterial()) 
+			if(!tilePoints[i].IsOutside() && (tilePoints[i].GetSlope() > maxSlope || tilePoints[i].GetIsOnBannedMaterial())) 
 				stateKey |= 1 << i;
 		}
 
@@ -656,6 +669,27 @@ class DAB_TerrainObstacleGrid
 		
 		return point.GetSlope();
 	}
+	
+	
+	bool IsSurfaceIllegalOnLocalPoint(vector localPoint)
+	{
+		if(m_fCellSize < 0)
+		{
+			Print("Terrain obstacle grid was not set up. You need to enable it in the settings!", LogLevel.ERROR);
+			return false;
+		}
+		
+		int x, z
+		if(!TryLocalToGridPosition(localPoint, x, z))
+			return false;
+		
+		DAB_TerrainObstaclePoint point = GetPoint(GetIndexFromGridPos(x,z));
+		if(!point) return false;
+		
+		return point.GetIsOnBannedMaterial();
+	}
+	
+	
 	
 	//------------------------------------------------------------------------------------------------
 	protected int GetIndexFromGridPos(int x, int z)

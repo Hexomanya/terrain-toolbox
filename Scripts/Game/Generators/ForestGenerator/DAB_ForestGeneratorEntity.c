@@ -27,6 +27,16 @@ modded class ForestGeneratorEntity {
 	bool m_bUseSlopeStartAsOutline;
 	
 	
+	[Attribute(defvalue: "", desc: "Surfaces that the forest will not generate on and include when calculating outlines",  category: "Surface Settings", uiwidget: UIWidgets.ResourcePickerThumbnail, params: "emat")]
+	protected ref array<ResourceName> m_aIllegalSurfaces;
+	
+	[Attribute(defvalue: "0", uiwidget: UIWidgets.CheckBox, desc: "If enabled, road will be included in the above surfaces", category: "Surface Settings")]
+	protected bool m_bAreRoadsIllegal;
+	
+	[Attribute(defvalue: "0", uiwidget: UIWidgets.CheckBox, desc: "If enabled, rivers/water will be included in the above surfaces", category: "Surface Settings")]
+	protected bool m_bIsWaterIllegal;
+	
+	
 	[Attribute(defvalue: "80", desc: "", category: "Outline Settings")]
 	float m_fSmallOutlineMinArea;
 	
@@ -93,7 +103,20 @@ modded class ForestGeneratorEntity {
 			float slopeCutOff = GetSlopeTotalCutOff();
 			
 			Debug.BeginTimeMeasure();
-			m_TerrainObstacleGrid.RegenerateGrid(m_fQueryGridSize, bbox, polygon2D, worldMat, world, slopeCutOff, m_bEnableSlopeOutlines, Math.Min(m_fSmallOutlineMinArea, m_fMiddleOutlineMinArea), m_fMaxPointRemovalError);
+			m_TerrainObstacleGrid.RegenerateGrid(
+				m_fQueryGridSize, 
+				bbox, 
+				polygon2D, 
+				worldMat, 
+				world, 
+				slopeCutOff, 
+				m_bEnableSlopeOutlines, 
+				Math.Min(m_fSmallOutlineMinArea, m_fMiddleOutlineMinArea), 
+				m_fMaxPointRemovalError,
+				m_aIllegalSurfaces,
+				m_bAreRoadsIllegal,
+	 			m_bIsWaterIllegal
+			);
 			Debug.EndTimeMeasure("ForestGenerator - Slope generation done");
 	
 			Debug.BeginTimeMeasure();
@@ -275,6 +298,17 @@ modded class ForestGeneratorEntity {
 		return !isTooSteep;
 	}
 	
+	protected bool IsEntryOnIllegalSurface(vector pointLocal)
+	{
+		if (m_aIllegalSurfaces.Count() <= 0)
+			return true;
+	
+		WorldEditorAPI worldEditorAPI = _WB_GetEditorAPI();
+		BaseWorld world = worldEditorAPI.GetWorld();
+
+		return !m_TerrainObstacleGrid.IsSurfaceIllegalOnLocalPoint(pointLocal);
+	}
+	
 	protected bool IsEntryObjectValid(ForestGeneratorTree tree, vector pointLocal)
 	{
 		if(!m_bUseImprovedAvoidObjects) return true;
@@ -295,7 +329,7 @@ modded class ForestGeneratorEntity {
 		param.End = groundPosition;
 		param.Flags = TraceFlags.ENTS; 
 		
-		PrintFormat("Start is %1", startPosition);
+		//PrintFormat("Start is %1", startPosition);
 		
 		if(world.TraceMove(param) < 1) return false;
 		return true;
@@ -306,7 +340,7 @@ modded class ForestGeneratorEntity {
 	//! \param[in] tree
 	//! \param[in] pointLocal
 	//! \return
-	protected override bool IsEntryValid(ForestGeneratorTree tree, vector pointLocal)
+	protected override bool IsEntryValid(ForestGeneratorTree tree, vector pointWorld, vector pointLocal)
 	{
 		return IsEntryValidAdvanced(tree, pointLocal);
 	}
@@ -317,6 +351,7 @@ modded class ForestGeneratorEntity {
 		
 		float swapTreePercent
 		if(!IsEntrySlopeValid(tree, pointLocal, swapTreePercent)) return false;
+		if(!IsEntryOnIllegalSurface(pointLocal)) return false;
 		if(!IsEntryObjectValid(tree, pointLocal)) return false;
 
 		FallenTree fallenTree = FallenTree.Cast(tree);

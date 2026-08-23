@@ -1,4 +1,5 @@
 #ifdef WORKBENCH
+/*
 [WorkbenchPluginAttribute(
 	name: "FPS Diagnostic - Extended",
 	description: "Collect FPS all over the terrain and create a heatmap of it",
@@ -125,7 +126,7 @@ class DAB_FPSDiagnosticPlugin : SCR_FPSDiagnosticPlugin
 			SCR_WorkbenchHelper.PrintDialog("No relevant positions were found - try setting a higher definition.");
 			return;
 		}*/
-
+/*
 		int oceanIndicesCount;
 		if (oceanIndices)
 			oceanIndicesCount = oceanIndices.Count();
@@ -576,5 +577,5 @@ class DAB_FPSDiagnosticPlugin : SCR_FPSDiagnosticPlugin
 			worldEditorAPI.SetCamera(position + m_vPositionOffset, angles.AnglesToVector());
 		}
 	}
-}
+}*/
 #endif //Workbench

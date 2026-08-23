@@ -151,7 +151,7 @@ class DAB_ObjectOverSurfaceRemover : WorldEditorTool
 	                candidate[2] = worldPos[2] + radius * Math.Sin(angleRad);
 					candidate[1] = m_API.GetTerrainSurfaceY(candidate[0], candidate[2]);
 	                
-	                if (IsIllegalSurface(candidate, entity)) continue;
+	                if (DAB_WorldHelper.IsPositionOverSurfaces(m_World, candidate, m_selectionSurfaces, m_bRiverSelection, m_bRoadSelection, entity)) continue;
 	                
 				    vector coordsToSet = candidate;
 					IEntitySource parentSource = entitySource.GetParent();
@@ -179,73 +179,6 @@ class DAB_ObjectOverSurfaceRemover : WorldEditorTool
 	}
 	
 	//------------------------------------------------------------------------------------------------
-	protected bool TryGetSurface(vector groundPosition, out TraceParam params)
-	{
-		if(!m_World){
-			Print("There is no world to trace!", LogLevel.ERROR);
-			return false;
-		}
-		params = new TraceParam();
-		params.Flags = TraceFlags.WORLD | TraceFlags.ANY_CONTACT;
-		params.Start = groundPosition + (0.1 * vector.Up);
-		params.End = groundPosition - (1000 * vector.Up);
-		
-		float hitPercantage = m_World.TraceMove(params, null);
-		bool didHit = !float.AlmostEqual(hitPercantage, 1);
-		return didHit;
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	protected bool IsInOrAboveLakeOrRiver(IEntity entity, vector groundPosition)
-	{
-		if(!m_World){
-			Print("There is no world to trace!", LogLevel.ERROR);
-			return false;
-		}
-		
-		TraceParam params = new TraceParam();
-		params.Flags = TraceFlags.ENTS | TraceFlags.ANY_CONTACT;
-		params.TargetLayers = EPhysicsLayerDefs.Water;
-		params.Exclude = entity;
-		params.Start = groundPosition - (0.01 * vector.Up);
-		params.End = groundPosition + (1000 * vector.Up);
-		
-		m_World.TraceMove(params, null);
-		return params.TraceEnt != null;
-	}
-	
-	protected bool IsIllegalSurface(vector groundWorldPosition, IEntity excludeFromTrace = null)
-	{
-		TraceParam params;
-		if(TryGetSurface(groundWorldPosition, params))
-		{
-			if(IsOnBlacklistedSurfaces(params.TraceMaterial)) return true;
-			if(m_bRoadSelection)
-			{
-				bool isOverRoad = SurfaceIsRoad(params.TraceMaterial);
-				if(isOverRoad) return true;
-			}
-		}
-		
-		if(m_bRiverSelection)
-		{
-			vector outWaterSurfacePoint;
-			EWaterSurfaceType outType; 
-			vector transformWS[4];
-			vector obbExtents;
-			
-			// Only works for ocean in editor
-			bool didHitOcean = ChimeraWorldUtils.TryGetWaterSurface(m_World, groundWorldPosition, outWaterSurfacePoint, outType, transformWS, obbExtents);
-			if(didHitOcean) return true;
-			
-			bool didHitWater = IsInOrAboveLakeOrRiver(excludeFromTrace, groundWorldPosition);
-			if(didHitWater) return true;
-		}
-	
-		return false;
-	}
-		
-	//------------------------------------------------------------------------------------------------
 	protected bool IsOnIllegalSurface(IEntity entity)
 	{
 		bool isGenerator = m_bIgnoreGeneratorEntities && GeneratorBaseEntity.Cast(entity);
@@ -259,28 +192,7 @@ class DAB_ObjectOverSurfaceRemover : WorldEditorTool
 		float entityWorldHeight = m_API.GetTerrainSurfaceY(originPosition[0], originPosition[2]);
 		vector groundWorldPosition = Vector(originPosition[0], entityWorldHeight, originPosition[2]);
 		
-		return IsIllegalSurface(groundWorldPosition, entity);
-	}
-	
-	protected bool SurfaceIsRoad(string surfaceMaterial)
-	{
-		return surfaceMaterial.IndexOf("Road_") >= 0;
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	protected bool IsOnBlacklistedSurfaces(string surfaceMaterial){
-		if(surfaceMaterial.IsEmpty())
-		{
-			Print("IsOnBlacklistSurfaces was provided a empty surfaceMaterial!", LogLevel.ERROR);
-			return false;
-		}
-		
-		foreach(ResourceName blacklistSurface: m_selectionSurfaces)
-		{
-			if(blacklistSurface.GetPath() == surfaceMaterial) return true;
-		}
-		
-		return false;
+		return DAB_WorldHelper.IsPositionOverSurfaces(m_World, groundWorldPosition, m_selectionSurfaces, m_bRiverSelection, m_bRoadSelection, entity);
 	}
 	
 	//------------------------------------------------------------------------------------------------
