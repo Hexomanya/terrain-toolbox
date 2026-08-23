@@ -65,10 +65,13 @@ class DAB_TerrainObstacleGrid
 				bool isOutside = !Math2D.IsPointInPolygon(polygon2D, localPointPosition[0], localPointPosition[2]);
 				
 				float slope = INVALID_SLOPE;
+				bool isOnBannedMaterial = false;
 				if(!isOutside)
 				{
 					slope = ComputePointSlope(localPointPosition, world);
 					if(slope >= maxSlope) slopeTileIndices.Insert(m_aPoints.Count());
+					
+					isOnBannedMaterial
 				}
 				
 				m_aPoints.Insert(new DAB_TerrainObstaclePoint(isOutside, slope));
@@ -621,11 +624,10 @@ class DAB_TerrainObstacleGrid
 		int stateKey = 0;
 		
 		for(int i = 0; i < 4; i++){
-			if(!tilePoints[i].IsOutside() && tilePoints[i].GetSlope() > maxSlope)
+			if(!tilePoints[i].IsOutside() && tilePoints[i].GetSlope() > maxSlope && !tilePoints[i].GetIsOnBannedMaterial()) 
 				stateKey |= 1 << i;
 		}
-		
-		
+
 		return stateKey;
 	}
 	
