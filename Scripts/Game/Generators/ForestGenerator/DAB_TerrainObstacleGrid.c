@@ -3,6 +3,7 @@ class DAB_TerrainObstacleGrid
 	#ifdef WORKBENCH
 	
 	const float INVALID_SLOPE = - 1;
+	const int TILE_NEIGHBOUR_MARGIN = 1;
 	protected const ref array<ref array<int>> TILE_EDGE_LOOKUP = {};
 	
 	protected float m_fCellSize = - 1;
@@ -57,27 +58,42 @@ class DAB_TerrainObstacleGrid
 		m_iRows = Math.Ceil(bbox.m_vDimensions[0] / m_fCellSize) + 1; // +1 Because if a point is close to the bounding box, we are not guaranteed a closed loop
 		m_iColumns = Math.Ceil(bbox.m_vDimensions[2] / m_fCellSize) + 1; // +1 Because if a point is close to the bounding box, we are not guaranteed a closed loop
 
-		array<int> slopeTileIndices = {};
+		vector localPointPosition;
+		bool isOutside;
 		
 		for(int x = 0; x < m_iRows; x++)
 		{
 			for(int z = 0; z < m_iColumns; z++)
 			{
-				vector localPointPosition = GetLocalPointPosition(x,z);
-				
-				bool isOutside = !Math2D.IsPointInPolygon(polygon2D, localPointPosition[0], localPointPosition[2]);
-				
-				float slope = INVALID_SLOPE;
-				bool isOnBannedMaterial = false;
-				if(!isOutside)
+				localPointPosition = GetLocalPointPosition(x,z);
+				isOutside = !Math2D.IsPointInPolygon(polygon2D, localPointPosition[0], localPointPosition[2]);
+				m_aPoints.Insert(new DAB_TerrainObstaclePoint(isOutside));
+			}
+		}
+		
+		for(int x = 0; x < m_iRows; x++)
+		{
+			for(int z = 0; z < m_iColumns; z++)
+			{
+				DAB_TerrainObstaclePoint point = GetPointAt(x, z);
+				if(!point)
 				{
-					slope = ComputePointSlope(localPointPosition, world);
-					if(slope >= maxSlope) slopeTileIndices.Insert(m_aPoints.Count());
-					
-					isOnBannedMaterial = ComputeIsOnBannedMaterial(world, localPointPosition, illegalSurfaces, areRoadsIllegal,isWaterIllegal);
+					PrintFormat("RegenerateGrid: Could not retrieve point at (%1, %2)!", x, z, LogLevel.ERROR);
+					continue;
 				}
 				
-				m_aPoints.Insert(new DAB_TerrainObstaclePoint(isOutside, slope, isOnBannedMaterial));
+				// We build a buffer around the outline, because otherwise we sometimes get struggler trees between generated and default outline.
+				if(point.IsOutside() && !HasInsideNeighbor(x, z, TILE_NEIGHBOUR_MARGIN))
+					continue;
+				
+				localPointPosition = GetLocalPointPosition(x,z); //TODO: Better to safe on point?
+				float slope = INVALID_SLOPE;
+				bool isOnBannedMaterial = false;
+				
+				slope = ComputePointSlope(localPointPosition, world);
+				isOnBannedMaterial = ComputeIsOnBannedMaterial(world, localPointPosition, illegalSurfaces, areRoadsIllegal,isWaterIllegal);
+				
+				point.SetData(slope, isOnBannedMaterial);
 			}
 		}
 		if(maxSlope <= 0) return; //This would cause a double outline
@@ -89,6 +105,29 @@ class DAB_TerrainObstacleGrid
 		ComputeOutlineDirection();
 	}
 	
+	//------------------------------------------------------------------------------------------------
+	protected bool HasInsideNeighbor(int x, int z, int margin)
+	{
+		for (int dx = -margin; dx <= margin; dx++)
+		{
+			for (int dz = -margin; dz <= margin; dz++)
+			{
+				if (dx == 0 && dz == 0)
+					continue;
+	
+				int nx = x + dx;
+				int nz = z + dz;
+				
+				DAB_TerrainObstaclePoint point = GetPointAt(nx, nz);
+				if(!point) continue;
+				if (!point.IsOutside())
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	//------------------------------------------------------------------------------------------------
 	// Default Orientation is CW for 1, 0 is the default forest outline
 	protected void ComputeOutlineDirection()
 	{
@@ -121,6 +160,7 @@ class DAB_TerrainObstacleGrid
 		}
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	void CompileForestGeneratorData(
 		notnull out array<ref DAB_ForestOutline> compiledOutlines, 
 		float smallOutlineMinArea,
@@ -181,12 +221,14 @@ class DAB_TerrainObstacleGrid
 		}
 	}
 
+	//------------------------------------------------------------------------------------------------
 	protected void OptimizeOutlines(float minOutlineArea, float maxPointRemovalError)
 	{
 		FilterOutlinesByArea(minOutlineArea);
 		FilterUnrelevantPoints(maxPointRemovalError);
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected static float PointToSegmentDistance(vector A, vector B, vector P)
 	{
 	    vector ab = B - A;
@@ -207,6 +249,7 @@ class DAB_TerrainObstacleGrid
 	    return vector.Distance(P, Closest);
 	}
 
+	//------------------------------------------------------------------------------------------------
 	protected void FilterUnrelevantPoints(float maxPointRemovalError)
 	{		
 		int pointRemovedCount = 0;
@@ -263,6 +306,7 @@ class DAB_TerrainObstacleGrid
 		PrintFormat("Removed %1 points that landed under an error of %2", pointRemovedCount, maxPointRemovalError);
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	//nextIndex after removal is the same as current index before removal 
 	protected static void UpdateRemovalErrors(array<ref DAB_OutlinePoint> points, notnull out array<float> errors, int prevIndex, int nextIndex)
 	{
@@ -273,6 +317,7 @@ class DAB_TerrainObstacleGrid
 		errors[nextIndex] = ComputeRemovalErrorForPoint(points, nextIndex);
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected static float ComputeRemovalErrorForPoint(array<ref DAB_OutlinePoint> points, int currentPointIndex)
 	{
 		int count = points.Count();
@@ -289,6 +334,7 @@ class DAB_TerrainObstacleGrid
         return PointToSegmentDistance(prevPointPos, nextPointPos, pointPos);
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected static void ComputeRemovalErrors(array<ref DAB_OutlinePoint> points,notnull out array<float> errors)
 	{
 	    errors.Clear();
@@ -301,6 +347,7 @@ class DAB_TerrainObstacleGrid
 	    }
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected int GetSmallestOffender(array<float> removalErrors, float maxPointRemovalError)
 	{
 		int smallestOffender = -1;
@@ -319,6 +366,7 @@ class DAB_TerrainObstacleGrid
 		return smallestOffender;
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected void FilterOutlinesByArea(float minOutlineArea)
 	{
 		int count = m_aSlopeOutlines.Count();
@@ -346,6 +394,7 @@ class DAB_TerrainObstacleGrid
 		PrintFormat("Removed %1 outlines because their areas were too small.", count - m_aSlopeOutlines.Count(), LogLevel.NORMAL);
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected void ReversePointOrder(int outlineIndex)
 	{
 		DAB_Outline outline =  m_aSlopeOutlines[outlineIndex];
@@ -361,6 +410,7 @@ class DAB_TerrainObstacleGrid
 		}
 	}
 
+	//------------------------------------------------------------------------------------------------
 	// Shoelace + = CW; - = CCW
 	protected float GetOutlinedAreaXZ(DAB_Outline outline)
 	{
@@ -379,6 +429,7 @@ class DAB_TerrainObstacleGrid
 		return areaSum * 0.5;
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected void BuildOutlines()
 	{
 		m_aSlopeOutlines.Clear();
@@ -460,6 +511,7 @@ class DAB_TerrainObstacleGrid
 		return Math.RAD2DEG * Math.Acos(vector.Dot(Vector(0, 1, 0), normal)); 
 	}
 	
+	//------------------------------------------------------------------------------------------------
 	protected bool ComputeIsOnBannedMaterial(BaseWorld world, vector localPointPosition, array<ResourceName> illegalSurfaces, bool areRoadsIllegal, bool isWaterIllegal)
 	{
 		vector worldPosition = LocalToWorld(localPointPosition);
@@ -640,7 +692,6 @@ class DAB_TerrainObstacleGrid
 			if(!tilePoints[i].IsOutside() && (tilePoints[i].GetSlope() > maxSlope || tilePoints[i].GetIsOnBannedMaterial())) 
 				stateKey |= 1 << i;
 		}
-
 		return stateKey;
 	}
 	
@@ -649,6 +700,13 @@ class DAB_TerrainObstacleGrid
 	{
 		if(!IsValidIndex(index)) return null;
 		return m_aPoints.Get(index);
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	protected DAB_TerrainObstaclePoint GetPointAt(int x, int z)
+	{
+		if(!IsValidGridPos(x, z)) return null;
+		return GetPoint(GetIndexFromGridPos(x, z));
 	}
 	
 	//TODO: We could sample and average 4 points around the localPoint, but that would be slower and probably not worth it
@@ -661,8 +719,9 @@ class DAB_TerrainObstacleGrid
 		}
 		
 		int x, z
-		if(!TryLocalToGridPosition(localPoint, x, z))
-			return INVALID_SLOPE;
+		if(!TryLocalToNextGridPosition(localPoint, x, z))
+			if(!TryLocalToFloorGridPosition(localPoint, x, z))
+				return INVALID_SLOPE;
 		
 		DAB_TerrainObstaclePoint point = GetPoint(GetIndexFromGridPos(x,z));
 		if(!point) return INVALID_SLOPE;
@@ -680,8 +739,9 @@ class DAB_TerrainObstacleGrid
 		}
 		
 		int x, z
-		if(!TryLocalToGridPosition(localPoint, x, z))
-			return false;
+		if(!TryLocalToNextGridPosition(localPoint, x, z))
+			if(!TryLocalToFloorGridPosition(localPoint, x, z))
+				return false;
 		
 		DAB_TerrainObstaclePoint point = GetPoint(GetIndexFromGridPos(x,z));
 		if(!point) return false;
@@ -721,7 +781,16 @@ class DAB_TerrainObstacleGrid
 	}
 
 	//------------------------------------------------------------------------------------------------
-	protected bool TryLocalToGridPosition(vector localPos, out int x, out int z)
+	protected bool TryLocalToNextGridPosition(vector localPos, out int x, out int z)
+	{
+		x = Math.Round((localPos[0] - m_vOriginLocal[0]) / m_fCellSize);
+		z = Math.Round((localPos[2] - m_vOriginLocal[2]) / m_fCellSize);
+	
+		return IsValidGridPos(x,z);
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	protected bool TryLocalToFloorGridPosition(vector localPos, out int x, out int z)
 	{
 		x = Math.Floor((localPos[0] - m_vOriginLocal[0]) / m_fCellSize);
 		z = Math.Floor((localPos[2] - m_vOriginLocal[2]) / m_fCellSize);

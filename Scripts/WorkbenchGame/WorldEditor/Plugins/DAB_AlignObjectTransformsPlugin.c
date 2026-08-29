@@ -53,7 +53,7 @@ class AlignObjectTransformsToLastSelectedPlugin : WorkbenchPlugin
 			}
 
 			//Flags
-			//api.SetVariableValue(entitySource, null, DAB_Constants.FLAGS, newFlags.ToString());
+			api.SetVariableValue(entitySource, null, DAB_Constants.FLAGS, newFlags.ToString());
 			
 			//Position
 			api.SetVariableValue(entitySource, {}, DAB_Constants.COORDS, lastPos.ToString(false));

@@ -271,7 +271,7 @@ modded class ForestGeneratorEntity {
 	    return false;
 	}
 	
-	protected bool IsEntrySlopeValid(inout ForestGeneratorTree tree, vector pointLocal, out float swapTreePercent)
+	protected bool IsEntrySlopeValid(inout SCR_ForestGeneratorTreeBase tree, vector pointLocal, out float swapTreePercent)
 	{
 		if (!m_bEnableSlopeChecks)
 			return true;
@@ -309,7 +309,7 @@ modded class ForestGeneratorEntity {
 		return !m_TerrainObstacleGrid.IsSurfaceIllegalOnLocalPoint(pointLocal);
 	}
 	
-	protected bool IsEntryObjectValid(ForestGeneratorTree tree, vector pointLocal)
+	protected bool IsEntryObjectValid(vector pointLocal)
 	{
 		if(!m_bUseImprovedAvoidObjects) return true;
 		
@@ -342,17 +342,18 @@ modded class ForestGeneratorEntity {
 	//! \return
 	protected override bool IsEntryValid(ForestGeneratorTree tree, vector pointWorld, vector pointLocal)
 	{
-		return IsEntryValidAdvanced(tree, pointLocal);
+		SCR_ForestGeneratorTreeBase treeBase = tree;
+		return IsEntryValidAdvanced(treeBase, pointLocal);
 	}
 	
-	protected bool IsEntryValidAdvanced(inout ForestGeneratorTree tree, vector pointLocal)
+	protected bool IsEntryValidAdvanced(inout SCR_ForestGeneratorTreeBase tree, vector pointLocal)
 	{
 		if (!tree) return false;
 		
 		float swapTreePercent
 		if(!IsEntrySlopeValid(tree, pointLocal, swapTreePercent)) return false;
 		if(!IsEntryOnIllegalSurface(pointLocal)) return false;
-		if(!IsEntryObjectValid(tree, pointLocal)) return false;
+		if(!IsEntryObjectValid(pointLocal)) return false;
 
 		FallenTree fallenTree = FallenTree.Cast(tree);
 		if (fallenTree)
@@ -375,7 +376,7 @@ modded class ForestGeneratorEntity {
 	}
 	
 	//Dirty hack to change trees on the slope for Outline trees
-	protected void ChangeTreeForOutline(inout ForestGeneratorTree tree, vector point, float swapTreePercent)
+	protected void ChangeTreeForOutline(inout SCR_ForestGeneratorTreeBase tree, vector point, float swapTreePercent)
 	{
 		if(m_aSwapableOutlineTrees.IsEmpty()) return;
 		if(m_RandomGenerator.RandFloat01() > swapTreePercent) return;
@@ -817,7 +818,7 @@ modded class ForestGeneratorEntity {
 				if (baseEntry.m_fRandomRollAngle > 0)
 					randomAngles[2] = SafeRandomFloatInclusive(-baseEntry.m_fRandomRollAngle, baseEntry.m_fRandomRollAngle);
 
-				// alignToNormal = false;
+				alignToNormal = false;
 			}
 
 			fallenTree = FallenTree.Cast(baseEntry);
@@ -840,11 +841,16 @@ modded class ForestGeneratorEntity {
 			if (randomAngles[2] != 0)
 				SCR_Math3D.RotateAround(entityMatrix, entityMatrix[3], entityMatrix[2], -Math.DEG2RAD * randomAngles[2], entityMatrix);
 			
+			
+			// TODO: AI
+			// If the object is fallenTree or wideObject we want to check if it has the "PLACEMENT" variable set on it (This determines if it transforms to fit the terrain).
+			// If it has not we want to align it to the terrain. We do this by taking the CURRENT lowest BBox plane and find the best fit for it like we do on the cliff generator.
+
 			if (alignToNormal)
 			{
 				traceParam.Start = worldPos + vector.Up;
 				traceParam.End = worldPos - vector.Up;
-				world.TraceMove(traceParam, null);
+				world.TraceMove(traceParam, null); //TODO: Can't we just get the normal from the util (But does the same I think)?
 
 				entityMatrix[1] = traceParam.TraceNorm.Normalized();					// newUp
 				entityMatrix[0] = (entityMatrix[1] * entityMatrix[2]).Normalized();		// newRight
@@ -855,7 +861,10 @@ modded class ForestGeneratorEntity {
 			vector angles = Math3D.MatrixToAngles(entityMatrix);
 			
 			//THIS IS THE MODDED CHANGE: Just fix fallen trees for now
-			if (fallenTree) {
+			string placementMode;
+			entitySource.Get("placement", placementMode); //TODO: use constants helper
+			
+			if(!placementMode.IsEmpty()) {
 				angles[1] = 0;
 				angles[2] = 0;
 			}
@@ -942,7 +951,7 @@ modded class ForestGeneratorEntity {
 		vector pointLocal;
 		int expectedIterCount = m_fArea * HECTARE_CONVERSION_FACTOR * topLevel.m_fDensity;
 		vector point;
-		ForestGeneratorTree tree;
+		SCR_ForestGeneratorTreeBase tree;
 
 		foreach (SCR_ForestGeneratorRectangle rectangle : m_aRectangles)
 		{
@@ -1066,6 +1075,170 @@ modded class ForestGeneratorEntity {
 		
 		vector C = A + (ab * t); // We interpolate Y too here, but discard it at the distance
 		return vector.DistanceSqXZ(P, C);
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	//!
+	//! \param[in] cluster
+	//! \param[in] polygon2D
+	//! \param[in] bbox
+	protected override void GenerateCircleCluster(notnull ForestGeneratorCircleCluster cluster, notnull array<float> polygon2D, notnull SCR_AABB bbox)
+	{
+		vector worldMat[4];
+		GetWorldTransform(worldMat);
+
+		float CDENSHA = SafeRandomFloatInclusive(cluster.m_fMinCDENSHA, cluster.m_fMaxCDENSHA);
+
+		vector clusterCenter;
+		vector pointLocal;
+		SmallForestGeneratorClusterObject newClusterObject;
+		SCR_ForestGeneratorTreeBase newTreeObject;
+		vector point;
+		WideForestGeneratorClusterObject wideObject;
+		for (int c, clusterCount = Math.Ceil(m_fArea * HECTARE_CONVERSION_FACTOR * CDENSHA); c < clusterCount; c++)
+		{
+			bool allowInForest = cluster.m_iPlacementArea != 2;
+			bool allowInOutline = cluster.m_iPlacementArea != 1;
+			if (!GetClusterPoint(polygon2D, bbox, clusterCenter, cluster.m_fRadius, allowInForest, allowInOutline))
+				continue;
+
+			bool isPolygonCheckUseless = !SCR_Math3D.IsPointWithinSplineDistanceXZ(m_aShapePoints, clusterCenter, cluster.m_fRadius);
+
+			foreach (SmallForestGeneratorClusterObject clusterObject : cluster.m_aObjects)
+			{
+				for (int o, objectCount = GetClusterObjectCount(clusterObject); o < objectCount; o++)
+				{
+					pointLocal = GeneratePointInCircle(clusterObject.m_fMinRadius, clusterObject.m_fMaxRadius, clusterCenter);
+					if (isPolygonCheckUseless || Math2D.IsPointInPolygon(polygon2D, pointLocal[0], pointLocal[2]))
+					{
+						if (s_Benchmark)
+							s_Benchmark.BeginMeasure("clone");
+
+						newClusterObject = SmallForestGeneratorClusterObject.Cast(clusterObject.Clone());
+
+						if (s_Benchmark)
+							s_Benchmark.EndMeasure("clone");
+
+						if (!newClusterObject)
+							continue;
+
+						newTreeObject = newClusterObject;
+						if(!IsEntryValidAdvanced(newTreeObject, pointLocal))
+							continue;
+						
+						m_aGridEntries.Insert(newClusterObject);
+						point = pointLocal.Multiply4(worldMat);
+
+						SetObjectScale(newClusterObject);
+
+						wideObject = WideForestGeneratorClusterObject.Cast(newClusterObject);
+						if (wideObject)
+						{
+							wideObject.m_fYaw = m_RandomGenerator.RandFloat01() * 360;
+							wideObject.Rotate();
+						}
+
+						if (m_Grid.IsColliding(point, newClusterObject))
+							continue;
+
+						newClusterObject.m_eType = SCR_ETreeType.CLUSTER;
+						m_Grid.AddEntry(newClusterObject, point);
+					}
+				}
+			}
+		}
+	}
+
+	//------------------------------------------------------------------------------------------------
+	//!
+	//! \param[in] cluster
+	//! \param[in] polygon2D
+	//! \param[in] bbox
+	protected override void GenerateStripCluster(notnull ForestGeneratorStripCluster cluster, notnull array<float> polygon2D, notnull SCR_AABB bbox)
+	{
+		vector worldMat[4];
+		GetWorldTransform(worldMat);
+
+		vector direction = vector.FromYaw(m_RandomGenerator.RandFloatXY(0, 360));
+		vector perpendicular;
+		perpendicular[0] = direction[2];
+		perpendicular[2] = -direction[0];
+
+		float CDENSHA = SafeRandomFloatInclusive(cluster.m_fMinCDENSHA, cluster.m_fMaxCDENSHA);
+
+		vector clusterCenter;
+		vector pointLocal;
+		vector offset;
+		vector point;
+		SmallForestGeneratorClusterObject newClusterObject;
+		SCR_ForestGeneratorTreeBase newTreeObject;
+		WideForestGeneratorClusterObject wideObject;
+		for (int c, clusterCount = Math.Ceil(m_fArea * HECTARE_CONVERSION_FACTOR * CDENSHA); c < clusterCount; c++)
+		{
+			bool allowInForest = cluster.m_iPlacementArea != 2;
+			bool allowInOutline = cluster.m_iPlacementArea != 1;
+			if (!GetClusterPoint(polygon2D, bbox, clusterCenter, cluster.m_fRadius, allowInForest, allowInOutline))
+				continue;
+
+			bool isPolygonCheckUseless = !SCR_Math3D.IsPointWithinSplineDistanceXZ(m_aShapePoints, clusterCenter, cluster.m_fRadius);
+
+			foreach (SmallForestGeneratorClusterObject clusterObject : cluster.m_aObjects)
+			{
+				for (int o, objectCount = GetClusterObjectCount(clusterObject); o < objectCount; o++)
+				{
+					float distance = SafeRandomFloatInclusive(clusterObject.m_fMinRadius, clusterObject.m_fMaxRadius);
+					int rnd = m_RandomGenerator.RandIntInclusive(0, 1);
+
+					if (rnd == 0)
+						distance = -distance;
+
+					float y01 = distance / cluster.m_fRadius * cluster.m_fFrequency;
+					float ySin = Math.Sin(y01 * 360 * Math.DEG2RAD);
+					float y = ySin * cluster.m_fAmplitude;
+
+					offset = vector.Zero;
+					offset[0] = SafeRandomFloatInclusive(0, cluster.m_fMaxXOffset);
+					offset[2] = SafeRandomFloatInclusive(0, cluster.m_fMaxYOffset);
+					pointLocal = (direction * distance) + (y * perpendicular) + clusterCenter + offset;
+
+					if (isPolygonCheckUseless || Math2D.IsPointInPolygon(polygon2D, pointLocal[0], pointLocal[2]))
+					{
+						if (s_Benchmark)
+							s_Benchmark.BeginMeasure("clone");
+
+						newClusterObject = SmallForestGeneratorClusterObject.Cast(clusterObject.Clone());
+
+						if (s_Benchmark)
+							s_Benchmark.EndMeasure("clone");
+
+						if (!newClusterObject)
+							continue;
+						
+						newTreeObject =newClusterObject;
+						if(!IsEntryValidAdvanced(newTreeObject, pointLocal))
+							continue;
+
+						m_aGridEntries.Insert(newClusterObject);
+						point = pointLocal.Multiply4(worldMat);
+
+						SetObjectScale(newClusterObject);
+
+						wideObject = WideForestGeneratorClusterObject.Cast(newClusterObject);
+						if (wideObject)
+						{
+							wideObject.m_fYaw = m_RandomGenerator.RandFloatXY(0, 360);
+							wideObject.Rotate();
+						}
+
+						if (m_Grid.IsColliding(point, newClusterObject))
+							continue;
+
+						newClusterObject.m_eType = SCR_ETreeType.CLUSTER;
+						m_Grid.AddEntry(newClusterObject, point);
+					}
+				}
+			}
+		}
 	}
 	
 	#endif
